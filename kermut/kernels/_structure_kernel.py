@@ -22,17 +22,18 @@ class BaseKernel(Kernel):
             representing the amino acids present at each position.
     """
 
-    def __init__(self, wt_sequence: torch.LongTensor):
+    def __init__(self, wt_sequence: torch.LongTensor, alphabet_size: int = 20):
         """Initialize base kernel with wild-type sequence information."""
         super(BaseKernel, self).__init__()
-        self.seq_len = wt_sequence.size(0) // 20
-        wt_sequence = wt_sequence.view(self.seq_len, 20)
+        self.alphabet_size = alphabet_size
+        self.seq_len = wt_sequence.size(0) // self.alphabet_size
+        wt_sequence = wt_sequence.view(self.seq_len, self.alphabet_size)
         self.register_buffer("wt_toks", torch.nonzero(wt_sequence)[:, 1])
 
     def _get_mutation_indices(self, x1: torch.Tensor, x2: torch.Tensor):
         """Extract indices where sequences differ from wild-type."""
-        x1 = x1.view(-1, self.seq_len, 20)
-        x2 = x2.view(-1, self.seq_len, 20)
+        x1 = x1.view(-1, self.seq_len, self.alphabet_size)
+        x2 = x2.view(-1, self.seq_len, self.alphabet_size)
         x1_toks = torch.nonzero(x1)[:, 2].view(x1.size(0), -1)
         x2_toks = torch.nonzero(x2)[:, 2].view(x2.size(0), -1)
         return (
